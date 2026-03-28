@@ -1,0 +1,72 @@
+{
+  "entities": {
+    "Subject": {
+      "title": "Subject",
+      "description": "A major field of study (e.g., Physics, Chemistry, Mathematics).",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "The name of the subject." },
+        "icon": { "type": "string", "description": "The icon name from lucide-react." },
+        "color": { "type": "string", "description": "The hex color code for the subject card." }
+      },
+      "required": ["name"]
+    },
+    "Chapter": {
+      "title": "Chapter",
+      "description": "A specific topic within a subject.",
+      "type": "object",
+      "properties": {
+        "subjectId": { "type": "string", "description": "The ID of the parent subject." },
+        "title": { "type": "string", "description": "The title of the chapter." },
+        "order": { "type": "number", "description": "The display order of the chapter." }
+      },
+      "required": ["subjectId", "title"]
+    },
+    "Content": {
+      "title": "Content",
+      "description": "Educational material within a chapter (notes, videos, practice).",
+      "type": "object",
+      "properties": {
+        "chapterId": { "type": "string", "description": "The ID of the parent chapter." },
+        "subjectId": { "type": "string", "description": "The ID of the parent subject." },
+        "type": { "type": "string", "enum": ["notes", "video", "practice"], "description": "The type of content." },
+        "title": { "type": "string", "description": "The title of the material." },
+        "url": { "type": "string", "description": "The URL to the file or video." },
+        "description": { "type": "string", "description": "A brief description of the content." }
+      },
+      "required": ["chapterId", "type", "title"]
+    },
+    "Resource": {
+      "title": "Resource",
+      "description": "General educational resources like assignments or important links.",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["notes", "assignment", "link"], "description": "The category of the resource." },
+        "title": { "type": "string", "description": "The title of the resource." },
+        "description": { "type": "string", "description": "A brief description of the resource." },
+        "url": { "type": "string", "description": "The URL to the resource." }
+      },
+      "required": ["type", "title", "url"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Student profile information.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The Firebase Auth UID." },
+        "displayName": { "type": "string", "description": "The student's name." },
+        "email": { "type": "string", "description": "The student's email." },
+        "savedResources": { "type": "array", "items": { "type": "string" }, "description": "List of saved resource IDs." },
+        "recentlyViewed": { "type": "array", "items": { "type": "string" }, "description": "List of recently viewed content IDs." }
+      },
+      "required": ["uid"]
+    }
+  },
+  "firestore": {
+    "/subjects": { "schema": "Subject", "description": "Main subjects." },
+    "/chapters": { "schema": "Chapter", "description": "Chapters within subjects." },
+    "/content": { "schema": "Content", "description": "Materials within chapters." },
+    "/resources": { "schema": "Resource", "description": "General resources." },
+    "/users": { "schema": "UserProfile", "description": "User profiles." }
+  }
+}

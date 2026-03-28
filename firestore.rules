@@ -1,0 +1,82 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() &&
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         (request.auth.token.email == "rajeshpoddar252619@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidSubject(data) {
+      return data.keys().hasAll(['name']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100;
+    }
+
+    function isValidChapter(data) {
+      return data.keys().hasAll(['subjectId', 'title']) &&
+             data.subjectId is string && data.title is string && 
+             data.title.size() > 0 && data.title.size() < 200;
+    }
+
+    function isValidContent(data) {
+      return data.keys().hasAll(['chapterId', 'type', 'title']) &&
+             data.chapterId is string && data.type in ['notes', 'video', 'practice'] &&
+             data.title is string && data.title.size() > 0 && data.title.size() < 200;
+    }
+
+    function isValidResource(data) {
+      return data.keys().hasAll(['type', 'title', 'url']) &&
+             data.type in ['notes', 'assignment', 'link'] &&
+             data.title is string && data.title.size() > 0 && data.title.size() < 200 &&
+             data.url is string && data.url.size() > 0;
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid']) &&
+             data.uid is string && data.uid == request.auth.uid;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /subjects/{subjectId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidSubject(request.resource.data);
+    }
+
+    match /chapters/{chapterId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidChapter(request.resource.data);
+    }
+
+    match /content/{contentId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidContent(request.resource.data);
+    }
+
+    match /resources/{resourceId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidResource(request.resource.data);
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isAuthenticated() && isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isAuthenticated() && isOwner(userId) && isValidUser(request.resource.data) &&
+                      (request.resource.data.role == resource.data.role || isAdmin());
+    }
+  }
+}
